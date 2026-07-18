@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Chat Global</title>
+
+<meta property="og:title" content="Chat Global - Converse em tempo real">
+<meta property="og:description" content="Entre e converse com pessoas do mundo todo em tempo real, sem cadastro!">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://seusite.github.io/">
+<meta property="og:image" content="https://em-content.zobj.net/source/microsoft-teams/337/speech-balloon_1f4ac.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Chat Global - Converse em tempo real">
+<meta name="twitter:description" content="Entre e converse com pessoas do mundo todo em tempo real, sem cadastro!">
+<meta name="twitter:image" content="https://em-content.zobj.net/source/microsoft-teams/337/speech-balloon_1f4ac.png">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%;
+  background: #0f1117;
+  color: #e8e8e8;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  overflow: hidden;
+}
+#app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
+  background: #14161f;
+}
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #1e2233, #171a26);
+  border-bottom: 1px solid #262a3a;
+  flex-shrink: 0;
+}
+#header-left {
+  display: flex;
+  flex-direction: column;
+}
+#header h1 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+}
+#online-count {
+  font-size: 11px;
+  color: #7ee787;
+  margin-top: 2px;
+}
+#header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#change-name-btn {
+  background: #232636;
+  border: 1px solid #2b2f42;
+  color: #cfd3e6;
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 11px;
+  cursor: pointer;
+}
+#change-name-btn:active {
+  opacity: .8;
+}
+#status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9aa0b0;
+}
+#status .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffb020;
+  box-shadow: 0 0 6px #ffb020;
+  transition: background .3s, box-shadow .3s;
+}
+#status.online .dot {
+  background: #2ecc71;
+  box-shadow: 0 0 6px #2ecc71;
+}
+#status.offline .dot {
+  background: #ff5252;
+  box-shadow: 0 0 6px #ff5252;
+}
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+#messages::-webkit-scrollbar { width: 6px; }
+#messages::-webkit-scrollbar-thumb { background: #2a2e3f; border-radius: 3px; }
+
+.msg-item {
+  display: flex;
+  gap: 8px;
+  max-width: 85%;
+  animation: fadeIn .25s ease-out;
+}
+.msg-item.me { align-self: flex-end; flex-direction: row-reverse; }
+.msg-item.other { align-self: flex-start; }
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.bubble-col {
+  display: flex;
+  flex-direction: column;
+}
+.msg-item.me .bubble-col { align-items: flex-end; }
+.msg-item.other .bubble-col { align-items: flex-start; }
+
+.bubble-name {
+  font-size: 11px;
+  color: #7d8397;
+  margin-bottom: 2px;
+  padding: 0 6px;
+}
+.bubble {
+  padding: 9px 13px;
+  border-radius: 16px;
+  font-size: 14.5px;
+  line-height: 1.35;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+.msg-item.me .bubble {
+  background: linear-gradient(135deg, #4f6df5, #3f56d6);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg-item.other .bubble {
+  background: #232636;
+  color: #e8e8e8;
+  border-bottom-left-radius: 4px;
+}
+.bubble-time {
+  font-size: 10px;
+  color: #6b7086;
+  margin-top: 3px;
+  padding: 0 6px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#empty-hint {
+  text-align: center;
+  color: #565b70;
+  font-size: 13px;
+  margin: auto;
+  padding: 20px;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 8px;
+  max-width: 70%;
+}
+.skeleton-row.right { align-self: flex-end; flex-direction: row-reverse; }
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #1e2130 25%, #262a3d 37%, #1e2130 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+  flex-shrink: 0;
+}
+.skeleton-bubble {
+  width: 160px;
+  height: 40px;
+  border-radius: 16px;
+  background: linear-gradient(90deg, #1e2130 25%, #262a3d 37%, #1e2130 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+#input-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  background: #171a26;
+  border-top: 1px solid #262a3a;
+  flex-shrink: 0;
+}
+#msg-input {
+  flex: 1;
+  background: #232636;
+  border: 1px solid #2b2f42;
+  color: #e8e8e8;
+  border-radius: 22px;
+  padding: 11px 16px;
+  font-size: 15px;
+  outline: none;
+  resize: none;
+  max-height: 100px;
+}
+#msg-input:focus { border-color: #4f6df5; }
+#send-btn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #4f6df5, #3f56d6);
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform .1s, opacity .2s;
+}
+#send-btn:active { transform: scale(0.92); }
+#send-btn:disabled { opacity: .4; cursor: default; }
+
+#typing-indicator {
+  font-size: 12px;
+  color: #7d8397;
+  padding: 2px 16px 6px;
+  min-height: 18px;
+  font-style: italic;
+}
+
+#modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #1a2035, #06070c 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+#modal-box {
+  background: #1a1d2b;
+  border: 1px solid #2a2e40;
+  border-radius: 20px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,.6);
+}
+#modal-emoji {
+  font-size: 46px;
+  margin-bottom: 10px;
+}
+#modal-box h2 {
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+#modal-box p {
+  font-size: 13px;
+  color: #8a8fa5;
+  margin-bottom: 20px;
+}
+#name-input {
+  width: 100%;
+  background: #232636;
+  border: 1px solid #2b2f42;
+  color: #fff;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  margin-bottom: 14px;
+  text-align: center;
+}
+#name-input:focus { border-color: #4f6df5; }
+#name-confirm {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #4f6df5, #3f56d6);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(79,109,245,.4);
+}
+#name-confirm:active { opacity: .85; }
+.hidden { display: none !important; }
+
+/* ===== MODAL DE TERMOS DE USO ===== */
+#terms-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #1a2035, #06070c 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 20px;
+}
+#terms-box {
+  background: #1a1d2b;
+  border: 1px solid #2a2e40;
+  border-radius: 20px;
+  padding: 32px 24px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,.6);
+}
+#terms-box .modal-emoji {
+  font-size: 46px;
+  margin-bottom: 10px;
+}
+#terms-box h2 {
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+#terms-text {
+  max-height: 200px;
+  overflow-y: auto;
+  text-align: left;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #b8bccb;
+  background: #14161f;
+  border: 1px solid #2b2f42;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+#terms-text::-webkit-scrollbar { width: 6px; }
+#terms-text::-webkit-scrollbar-thumb { background: #2a2e3f; border-radius: 3px; }
+#terms-warning {
+  font-size: 13px;
+  color: #ff8080;
+  margin-bottom: 14px;
+  min-height: 16px;
+}
+#terms-accept, #terms-decline {
+  width: 100%;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #fff;
+}
+#terms-accept {
+  background: linear-gradient(135deg, #4f6df5, #3f56d6);
+  box-shadow: 0 6px 18px rgba(79,109,245,.4);
+  margin-bottom: 10px;
+}
+#terms-accept:active { opacity: .85; }
+#terms-accept:disabled { opacity: .5; cursor: default; }
+#terms-decline {
+  background: #232636;
+  border: 1px solid #2b2f42;
+}
+#terms-decline:active { opacity: .85; }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="header">
+    <div id="header-left">
+      <h1>💬 Chat Global</h1>
+      <div id="online-count">🟢 -- online</div>
+    </div>
+
+    <div id="header-right">
+      <button id="change-name-btn" type="button">Trocar nome</button>
+      <div id="status"><span class="dot"></span><span id="status-text">conectando...</span></div>
+    </div>
+  </div>
+
+  <div id="messages">
+    <div class="skeleton-row">
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-bubble"></div>
+    </div>
+    <div class="skeleton-row right">
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-bubble"></div>
+    </div>
+    <div class="skeleton-row">
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-bubble"></div>
+    </div>
+  </div>
+
+  <div id="typing-indicator"></div>
+
+  <div id="input-bar">
+    <textarea id="msg-input" rows="1" placeholder="Digite uma mensagem..." maxlength="500"></textarea>
+    <button id="send-btn">➤</button>
+  </div>
+</div>
+
+<!-- Modal de Termos de Uso (aparece antes de tudo, bloqueia o acesso) -->
+<div id="terms-overlay" class="hidden">
+  <div id="terms-box">
+    <div class="modal-emoji">📜</div>
+    <h2>Termo de Uso</h2>
+    <div id="terms-text">
+      Ao usar este chat, você concorda em manter um comportamento respeitoso
+      com os demais usuários, não compartilhar conteúdo ilegal, ofensivo,
+      discriminatório ou spam. O uso é livre e anônimo, mas as mensagens
+      podem ser moderadas e removidas a qualquer momento. Nenhum dado
+      pessoal sensível deve ser compartilhado no chat. Ao clicar em
+      "Aceito", você concorda com estes termos (versão 1.0).
+    </div>
+    <div id="terms-warning"></div>
+    <button id="terms-accept">Aceito</button>
+    <button id="terms-decline">Não aceito</button>
+  </div>
+</div>
+
+<div id="modal-overlay" class="hidden">
+  <div id="modal-box">
+    <div id="modal-emoji">👋</div>
+    <h2>Bem-vindo(a)!</h2>
+    <p>Escolha um nome para entrar no chat global</p>
+    <input id="name-input" type="text" maxlength="20" placeholder="Seu nome">
+    <button id="name-confirm">Entrar no chat</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCoS4yPoAeHg_XMgw6P7VzqZujr6mUigNY",
+  authDomain: "siteglobal-2d2d4.firebaseapp.com",
+  databaseURL: "https://siteglobal-2d2d4-default-rtdb.firebaseio.com",
+  projectId: "siteglobal-2d2d4",
+  storageBucket: "siteglobal-2d2d4.firebasestorage.app",
+  messagingSenderId: "311483680304",
+  appId: "1:311483680304:web:04ac9a0f9cf5b635468ff5",
+  measurementId: "G-J3FW489DNX"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const rtdb = getDatabase(app);
+
+const appEl = document.getElementById("app");
+const messagesEl = document.getElementById("messages");
+const msgInput = document.getElementById("msg-input");
+const sendBtn = document.getElementById("send-btn");
+const statusEl = document.getElementById("status");
+const statusText = document.getElementById("status-text");
+const onlineCountEl = document.getElementById("online-count");
+const typingIndicator = document.getElementById("typing-indicator");
+const modalOverlay = document.getElementById("modal-overlay");
+const nameInput = document.getElementById("name-input");
+const nameConfirm = document.getElementById("name-confirm");
+const changeNameBtn = document.getElementById("change-name-btn");
+
+const termsOverlay = document.getElementById("terms-overlay");
+const termsAcceptBtn = document.getElementById("terms-accept");
+const termsDeclineBtn = document.getElementById("terms-decline");
+const termsWarning = document.getElementById("terms-warning");
+
+const TERMS_VERSION = "1.0";
+
+let currentUid = null;
+let username = localStorage.getItem("chat_username") || "";
+let typingTimeout = null;
+let presenceInitialized = false;
+let forceScrollToBottom = true; // true no início para garantir 1º scroll
+
+const AVATAR_COLORS = ["#4f6df5","#f5734f","#4fd6a8","#c04ff5","#f5c74f","#f54f8c","#4fb8f5","#8cf54f"];
+
+function nameToColor(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function nameToInitials(name) {
+  const clean = (name || "AN").trim();
+  const parts = clean.split(/\s+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+
+  return clean.substring(0, 2).toUpperCase();
+}
+
+function setAppHeight() {
+  const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  appEl.style.height = vh + "px";
+}
+setAppHeight();
+window.addEventListener("resize", setAppHeight);
+window.addEventListener("orientationchange", setAppHeight);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", setAppHeight);
+  window.visualViewport.addEventListener("scroll", setAppHeight);
+}
+
+function setStatus(state) {
+  statusEl.classList.remove("online", "offline");
+  if (state === "online") {
+    statusEl.classList.add("online");
+    statusText.textContent = "online";
+  } else if (state === "offline") {
+    statusEl.classList.add("offline");
+    statusText.textContent = "sem conexão";
+  } else {
+    statusText.textContent = "conectando...";
+  }
+}
+
+window.addEventListener("online", () => setStatus("online"));
+window.addEventListener("offline", () => setStatus("offline"));
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function showModalIfNeeded() {
+  if (username && username.trim() !== "") {
+    modalOverlay.classList.add("hidden");
+    return;
+  }
+  modalOverlay.classList.remove("hidden");
+  nameInput.focus();
+}
+
+nameConfirm.addEventListener("click", saveUsername);
+nameInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveUsername();
+});
+
+changeNameBtn.addEventListener("click", () => {
+  nameInput.value = username || "";
+  modalOverlay.classList.remove("hidden");
+  setTimeout(() => nameInput.focus(), 50);
+});
+
+/* ===== Validação de nome ===== */
+
+function sanitizeUsername(name) {
+  return name
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[<>]/g, "")
+    .substring(0, 20);
+}
+
+function isValidUsername(name) {
+  if (!name) return false;
+  if (name.length < 2) return false;
+  if (name.length > 20) return false;
+
+  const blockedNames = [
+    "admin",
+    "administrador",
+    "moderador",
+    "mod",
+    "suporte",
+    "sistema",
+    "dono",
+    "owner"
+  ];
+
+  const normalized = name.toLowerCase();
+
+  return !blockedNames.some((blocked) => normalized.includes(blocked));
+}
+
+function showNameError(message) {
+  nameInput.focus();
+  nameInput.style.borderColor = "#ff5252";
+  nameInput.value = "";
+  nameInput.placeholder = message;
+
+  setTimeout(() => {
+    nameInput.style.borderColor = "#2b2f42";
+    nameInput.placeholder = "Seu nome";
+  }, 1500);
+}
+
+function validateStoredUsername() {
+  const saved = localStorage.getItem("chat_username") || "";
+  const clean = sanitizeUsername(saved);
+
+  if (!isValidUsername(clean)) {
+    localStorage.removeItem("chat_username");
+    username = "";
+    return;
+  }
+
+  username = clean;
+  localStorage.setItem("chat_username", username);
+}
+
+function saveUsername() {
+  const val = sanitizeUsername(nameInput.value);
+
+  if (!isValidUsername(val)) {
+    showNameError("Nome inválido");
+    return;
+  }
+
+  username = val;
+  localStorage.setItem("chat_username", username);
+  modalOverlay.classList.add("hidden");
+
+  if (presenceInitialized) {
+    updatePresenceNow();
+  } else {
+    registerPresence();
+  }
+}
+
+/*
+  ===== LÓGICA DE TERMOS DE USO =====
+  checkAgreement(): busca agreements/{uid} no Firestore.
+   - Se o documento não existir, ou accepted !== true, ou version
+     diferente da atual -> bloqueia o acesso mostrando o modal de termos.
+   - Se já aceito na versão correta -> libera o fluxo normal (nome/chat).
+
+  Ordem garantida:
+   1. Verifica/aceita termo.
+   2. Valida nome (showModalIfNeeded).
+   3. Só então registra presença (se já houver nome válido).
+*/
+async function checkAgreement() {
+  if (!currentUid) return;
+
+  // Valida nome salvo antes de decidir qual modal mostrar
+  // (executa de forma síncrona, antes do primeiro "await" abaixo)
+  validateStoredUsername();
+
+  try {
+    const agreementRef = doc(db, "agreements", currentUid);
+    const snap = await getDoc(agreementRef);
+    const data = snap.exists() ? snap.data() : null;
+
+    const alreadyAccepted =
+      data && data.accepted === true && data.version === TERMS_VERSION;
+
+    if (alreadyAccepted) {
+      termsOverlay.classList.add("hidden");
+      showModalIfNeeded();
+
+      if (username) {
+        registerPresence();
+      }
+    } else {
+      modalOverlay.classList.add("hidden");
+      termsOverlay.classList.remove("hidden");
+    }
+  } catch (err) {
+    console.error("Erro ao verificar termo de uso:", err);
+    termsWarning.textContent = "Erro ao verificar termo. Tente novamente.";
+    termsOverlay.classList.remove("hidden");
+  }
+}
+
+async function acceptTerms() {
+  if (!currentUid) return;
+
+  termsAcceptBtn.disabled = true;
+  termsWarning.textContent = "";
+
+  try {
+    await setDoc(doc(db, "agreements", currentUid), {
+      accepted: true,
+      version: TERMS_VERSION,
+      acceptedAt: serverTimestamp()
+    });
+    termsOverlay.classList.add("hidden");
+    validateStoredUsername();
+    showModalIfNeeded();
+
+    if (username) {
+      registerPresence();
+    }
+  } catch (err) {
+    console.error("Erro ao registrar aceite:", err);
+    termsWarning.textContent = "Não foi possível registrar o aceite. Tente novamente.";
+  } finally {
+    termsAcceptBtn.disabled = false;
+  }
+}
+
+function declineTerms() {
+  termsWarning.textContent = "Você precisa aceitar o termo de uso para acessar o chat.";
+  termsDeclineBtn.style.display = "none";
+}
+
+termsAcceptBtn.addEventListener("click", acceptTerms);
+termsDeclineBtn.addEventListener("click", declineTerms);
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUid = user.uid;
+    setStatus("online");
+    checkAgreement(); // verifica termo de uso antes de liberar o modal de nome/presença
+  } else {
+    signInAnonymously(auth).catch((err) => {
+      console.error(err);
+      setStatus("offline");
+    });
+  }
+});
+
+/*
+  PRESENÇA MAIS ROBUSTA:
+  Escutamos o nó especial ".info/connected" do Realtime Database, que
+  reflete o estado REAL da conexão do cliente com o servidor, incluindo
+  reconexões após quedas de internet.
+
+  Toda vez que a conexão for (re)estabelecida:
+   1. Primeiro re-armamos o onDisconnect() (o que vai acontecer se a
+      conexão cair de novo) — isso evita ficar com online:true "solto"
+      caso a conexão caia antes de re-configurarmos o gatilho.
+   2. Só depois marcamos o usuário como online:true.
+
+  O campo lastSeen usa Date.now() (timestamp local do cliente).
+*/
+function registerPresence() {
+  if (!currentUid || !username) return;
+  if (presenceInitialized) return;
+  presenceInitialized = true;
+
+  const userStatusRef = ref(rtdb, "presence/" + currentUid);
+  const connectedRef = ref(rtdb, ".info/connected");
+
+  onValue(connectedRef, (snap) => {
+    if (snap.val() !== true) {
+      // Desconectado localmente. O próprio Realtime Database vai aplicar
+      // o valor configurado em onDisconnect() quando a queda for detectada
+      // pelo servidor — não precisamos fazer nada aqui.
+      return;
+    }
+
+    onDisconnect(userStatusRef)
+      .set({
+        online: false,
+        username: username,
+        lastSeen: Date.now()
+      })
+      .then(() => {
+        set(userStatusRef, {
+          online: true,
+          username: username,
+          lastSeen: Date.now()
+        });
+      })
+      .catch((err) => {
+        console.error("Falha ao configurar presença:", err);
+      });
+  });
+}
+
+/*
+  Atualiza apenas o valor atual no Realtime Database (sem reconfigurar
+  o listener de conexão nem o onDisconnect). Usado quando o usuário
+  troca de nome depois que a presença já foi inicializada.
+*/
+function updatePresenceNow() {
+  if (!currentUid || !username) return;
+
+  const userStatusRef = ref(rtdb, "presence/" + currentUid);
+
+  set(userStatusRef, {
+    online: true,
+    username: username,
+    lastSeen: Date.now()
+  }).catch((err) => {
+    console.error("Falha ao atualizar presença:", err);
+  });
+}
+
+const presenceListRef = ref(rtdb, "presence");
+onValue(presenceListRef, (snapshot) => {
+  let count = 0;
+  snapshot.forEach((child) => {
+    const data = child.val();
+    if (data && data.online) count++;
+  });
+  onlineCountEl.textContent = "🟢 " + count + " online";
+});
+
+function formatTime(ts) {
+  if (!ts) return "...";
+  const date = ts.toDate ? ts.toDate() : new Date();
+  let h = date.getHours().toString().padStart(2, "0");
+  let m = date.getMinutes().toString().padStart(2, "0");
+  return h + ":" + m;
+}
+
+/* 
+  Query corrigida: sempre busca as 200 mensagens MAIS RECENTES
+  (orderBy desc + limit), e invertemos na hora de renderizar para
+  manter a ordem cronológica na tela.
+*/
+const q = query(
+  collection(db, "messages"),
+  orderBy("createdAt", "desc"),
+  limit(200)
+);
+
+/*
+  SCROLL INTELIGENTE:
+  Verifica se o usuário estava "perto do fim" (dentro de um limite em
+  pixels) ANTES de re-renderizar a lista. Se estava perto do fim (ou
+  acabou de enviar uma mensagem própria), rolamos para o final depois
+  de renderizar. Caso contrário, restauramos a posição de leitura
+  exatamente onde estava, sem interromper quem está lendo mensagens
+  antigas.
+*/
+const NEAR_BOTTOM_THRESHOLD = 120;
+
+function isNearBottom() {
+  const distance = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight;
+  return distance <= NEAR_BOTTOM_THRESHOLD;
+}
+
+onSnapshot(q, (snapshot) => {
+  const shouldStickToBottom = forceScrollToBottom || isNearBottom();
+  const previousScrollTop = messagesEl.scrollTop;
+  forceScrollToBottom = false;
+
+  messagesEl.innerHTML = "";
+
+  if (snapshot.empty) {
+    messagesEl.innerHTML = '<div id="empty-hint">Nenhuma mensagem ainda. Seja o primeiro a falar! 🚀</div>';
+    return;
+  }
+
+  // Inverte a ordem (desc -> cronológica) apenas na hora de renderizar
+  const docs = snapshot.docs.slice().reverse();
+
+  docs.forEach((docSnap) => {
+    const data = docSnap.data();
+    const isMe = data.uid && data.uid === currentUid;
+    const displayName = isMe ? "Você" : (data.username || "Anônimo");
+
+    const item = document.createElement("div");
+    item.className = "msg-item " + (isMe ? "me" : "other");
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar";
+    avatar.style.background = nameToColor(data.username || "Anon");
+    avatar.textContent = nameToInitials(data.username || "AN");
+
+    const col = document.createElement("div");
+    col.className = "bubble-col";
+
+    const nameLabel = document.createElement("div");
+    nameLabel.className = "bubble-name";
+    nameLabel.textContent = displayName;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.innerHTML = escapeHtml(data.text || "").replace(/\n/g, "<br>");
+
+    const time = document.createElement("div");
+    time.className = "bubble-time";
+    time.textContent = formatTime(data.createdAt);
+
+    col.appendChild(nameLabel);
+    col.appendChild(bubble);
+    col.appendChild(time);
+    item.appendChild(avatar);
+    item.appendChild(col);
+    messagesEl.appendChild(item);
+  });
+
+  if (shouldStickToBottom) {
+    scrollToBottom();
+  } else {
+    messagesEl.scrollTop = previousScrollTop;
+  }
+}, (error) => {
+  console.error(error);
+  setStatus("offline");
+});
+
+function scrollToBottom() {
+  requestAnimationFrame(() => {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  });
+}
+
+onSnapshot(collection(db, "typing"), (snapshot) => {
+  const now = Date.now();
+  const typers = [];
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data();
+    if (data.uid !== currentUid && data.updatedAt) {
+      const ms = data.updatedAt.toMillis ? data.updatedAt.toMillis() : 0;
+      if (now - ms < 4000) typers.push(data.username);
+    }
+  });
+  if (typers.length === 0) {
+    typingIndicator.textContent = "";
+  } else if (typers.length === 1) {
+    typingIndicator.textContent = typers[0] + " está digitando...";
+  } else {
+    typingIndicator.textContent = typers.join(", ") + " estão digitando...";
+  }
+});
+
+function setTypingStatus() {
+  if (!currentUid || !username) return;
+  const typingRef = doc(db, "typing", currentUid);
+  setDoc(typingRef, {
+    username: username,
+    uid: currentUid,
+    updatedAt: serverTimestamp()
+  });
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {
+    deleteDoc(typingRef).catch(() => {});
+  }, 3000);
+}
+
+async function sendMessage() {
+  const text = msgInput.value.trim();
+  if (!text) return;
+  if (!currentUid) return;
+  if (!username) {
+    showModalIfNeeded();
+    return;
+  }
+
+  sendBtn.disabled = true;
+  try {
+    await addDoc(collection(db, "messages"), {
+      username: username,
+      text: text,
+      createdAt: serverTimestamp(),
+      uid: currentUid
+    });
+    forceScrollToBottom = true; // ao enviar, sempre rola pro final
+    msgInput.value = "";
+    autoResize();
+    deleteDoc(doc(db, "typing", currentUid)).catch(() => {});
+  } catch (err) {
+    console.error(err);
+    alert("Não foi possível enviar a mensagem. Verifique sua conexão.");
+  } finally {
+    sendBtn.disabled = false;
+    msgInput.focus();
+  }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+msgInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+msgInput.addEventListener("input", () => {
+  autoResize();
+  setTypingStatus();
+});
+
+function autoResize() {
+  msgInput.style.height = "auto";
+  msgInput.style.height = Math.min(msgInput.scrollHeight, 100) + "px";
+  setAppHeight();
+}
+msgInput.addEventListener("focus", () => setTimeout(setAppHeight, 300));
+
+setStatus(navigator.onLine ? "connecting" : "offline");
+</script>
+</body>
+</html>
