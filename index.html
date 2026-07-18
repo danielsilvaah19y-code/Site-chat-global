@@ -471,6 +471,7 @@ html, body {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
 import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, limit, doc, setDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -487,6 +488,12 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider("6LdaR1otAAAAADxeCoVbKMOK7M2ha27Z-xh_9ws_"),
+  isTokenAutoRefreshEnabled: true
+});
+
 const auth = getAuth(app);
 const db = getFirestore(app);
 const rtdb = getDatabase(app);
@@ -1021,7 +1028,7 @@ function autoResize() {
 }
 msgInput.addEventListener("focus", () => setTimeout(setAppHeight, 300));
 
-setStatus(navigator.onLine ? "connecting" : "offline");
+setStatus(navigator.onLine ? "online" : "offline");
 </script>
 </body>
-</html>
+                                           </html>
